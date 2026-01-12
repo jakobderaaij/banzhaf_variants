@@ -384,7 +384,7 @@ class SimpleGame:
         if self.model is None:
             raise ValueError("LP model not created. Call make_ilp() first.")
 
-        if accuracy == None: accuracy = 1/(self.n * 2**(self.n))
+        if accuracy == None: accuracy = 1/(self.n * 2**(self.n))**2
         
         # Add veto constraints if requested
         if veto_constraint and not self.veto_constraints_added:
@@ -462,6 +462,3 @@ if __name__ == "__main__":
     print(game.find_optimal_game(accuracy = 0.0001, veto_constraint = False))
     print(game.find_optimal_game(accuracy = 0.0001, veto_constraint = True))
 
-
-
-  
