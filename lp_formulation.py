@@ -222,10 +222,14 @@ class SimpleGame:
         self.model.update()
         self.veto_constraints_added = True
 
-    def find_game(self):
+    def find_game(self, alpha = None, veto_constraint = False):
         """
         Check if the current LP is feasible and return a feasible assignment if it exists.
         Optimized for speed - only checks feasibility, not optimality.
+
+        Args:
+            alpha: The desired L1 accuracy
+            veto_constraint: Whether to add veto constraints (default: False)
         
         Returns:
             dict with keys:
@@ -238,6 +242,13 @@ class SimpleGame:
         """
         if self.model is None:
             raise ValueError("LP model not created. Call make_ilp() first.")
+
+        if alpha != None:
+            self._update_alpha_constraint(alpha)
+
+        # Add veto constraints if requested
+        if veto_constraint and not self.veto_constraints_added:
+            self._add_no_veto_constraint()
         
         # Set objective to 0 for feasibility-only check (faster)
         self.model.setObjective(0, GRB.MINIMIZE)
@@ -456,9 +467,21 @@ class SimpleGame:
 
   
 if __name__ == "__main__":
+    # Example where the optimum induces an undeserving veto player.
     quota = sp.Rational(3,4)
     game = SimpleGame(quota, [1,1,1,1,1,1,1,2], True)
-    game.make_ilp(propensity = sp.Rational(1,2))
+    game.make_ilp(propensity = sp.Rational(11,20))
     print(game.find_optimal_game(accuracy = 0.0001, veto_constraint = False))
     print(game.find_optimal_game(accuracy = 0.0001, veto_constraint = True))
 
+
+    ontario_population = [1641,1668,2284,2403,2644,2740,3360,3473,3640,3679,3921,3931,4106,5140,5210,5436,6637,9404,11109,14170,15860]
+    quota = sp.Rational(3,4)
+    game = SimpleGame(quota, ontario_population, True)
+    game.make_ilp() 
+    # This is the command we want to run
+    # We know there exists a solution with a veto player with alpha = 0.00044..., 
+    # so we want to verify no solution without inducing a veto player can get
+    # better L1 norm:
+
+    # print(game.find_game(alpha = 0.00045)) 
